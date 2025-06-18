@@ -22,6 +22,145 @@
   </style>
 </head>
 <body>
-<!-- Conteúdo omitido por brevidade, assume-se que seja o mesmo do canvas -->
+  <div class="container">
+    <h2>ZANONFY</h2>
+    <label>Tipo:</label>
+    <select id="tipo">
+      <option value="ganho">Ganho</option>
+      <option value="despesa">Despesa</option>
+      <option value="poupanca">Poupança</option>
+    </select>
+    <label>Valor:</label>
+    <input type="number" id="valor" />
+
+    <label>Origem:</label>
+    <select id="origem">
+      <option value="santander">Santander</option>
+      <option value="mercadoPago">Mercado Pago</option>
+      <option value="caixa">Cakto</option>
+      <option value="bradesco">Bandex</option>
+      <option value="inter">Sicredi</option>
+      <option value="sicrediCredito">Sicredi Crédito</option>
+      <option value="dinheiro">Dinheiro</option>
+    </select>
+
+    <button onclick="adicionarRegistro()">Adicionar</button>
+
+    <h3>Saldo Atual: R$ <span id="saldo">0.00</span></h3>
+    <h4>Poupança: R$ <span id="poupanca">0.00</span></h4>
+
+    <div class="bancos">
+      <h4>Saldos por Banco:</h4>
+      <div class="banco-item"><label for="santander">Santander:</label><input type="number" id="santander" value="0" /></div>
+      <div class="banco-item"><label for="mercadoPago">Mercado Pago:</label><input type="number" id="mercadoPago" value="0" /></div>
+      <div class="banco-item"><label for="caixa">Cakto:</label><input type="number" id="caixa" value="0" /></div>
+      <div class="banco-item"><label for="bradesco">Bandex:</label><input type="number" id="bradesco" value="0" /></div>
+      <div class="banco-item"><label for="inter">Sicredi:</label><input type="number" id="inter" value="0" /></div>
+      <div class="banco-item"><label for="sicrediCredito">Sicredi Crédito:</label><input type="number" id="sicrediCredito" value="0" /></div>
+      <div class="banco-item"><label for="dinheiro">Dinheiro:</label><input type="number" id="dinheiro" value="0" /></div>
+      <button onclick="atualizarSaldoTotal()">Atualizar Saldo Total</button>
+      <h4>Total em Bancos: R$ <span id="totalBancos">0.00</span></h4>
+    </div>
+
+    <div class="registro" id="registros"></div>
+  </div>
+
+  <script>
+    let saldo = 0;
+    let poupanca = 0;
+    let historico = [];
+
+    function adicionarRegistro() {
+      const tipo = document.getElementById("tipo").value;
+      const origem = document.getElementById("origem").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const registros = document.getElementById("registros");
+
+      if (isNaN(valor) || valor <= 0) return;
+
+      let registroTexto = "";
+      let bancoInput = document.getElementById(origem);
+      let bancoValorAtual = parseFloat(bancoInput.value) || 0;
+
+      if (tipo === "ganho") {
+        saldo += valor;
+        bancoValorAtual += valor;
+        registroTexto = `+ R$ ${valor.toFixed(2)} (Ganho de ${origem})`;
+      } else if (tipo === "despesa") {
+        saldo -= valor;
+        bancoValorAtual -= valor;
+        registroTexto = `- R$ ${valor.toFixed(2)} (Despesa de ${origem})`;
+      } else if (tipo === "poupanca") {
+        poupanca += valor;
+        saldo -= valor;
+        bancoValorAtual -= valor;
+        registroTexto = `↗ R$ ${valor.toFixed(2)} (Poupança de ${origem})`;
+      }
+
+      bancoInput.value = bancoValorAtual.toFixed(2);
+      historico.push({ tipo, origem, valor });
+
+      const div = document.createElement("div");
+      div.innerHTML = `<span>${registroTexto}</span> <button onclick="removerUltimoRegistro()">Desfazer</button>`;
+      registros.prepend(div);
+
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
+      document.getElementById("poupanca").textContent = poupanca.toFixed(2);
+      document.getElementById("valor").value = "";
+      atualizarSaldoTotal();
+    }
+
+    function removerUltimoRegistro() {
+      if (historico.length === 0) return;
+
+      const ultimo = historico.pop();
+      const bancoInput = document.getElementById(ultimo.origem);
+      let bancoValorAtual = parseFloat(bancoInput.value) || 0;
+
+      if (ultimo.tipo === "ganho") {
+        saldo -= ultimo.valor;
+        bancoValorAtual -= ultimo.valor;
+      } else if (ultimo.tipo === "despesa") {
+        saldo += ultimo.valor;
+        bancoValorAtual += ultimo.valor;
+      } else if (ultimo.tipo === "poupanca") {
+        poupanca -= ultimo.valor;
+        saldo += ultimo.valor;
+        bancoValorAtual += ultimo.valor;
+      }
+
+      bancoInput.value = bancoValorAtual.toFixed(2);
+
+      const registros = document.getElementById("registros");
+      if (registros.firstChild) registros.removeChild(registros.firstChild);
+
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
+      document.getElementById("poupanca").textContent = poupanca.toFixed(2);
+      atualizarSaldoTotal();
+    }
+
+    function atualizarSaldoTotal() {
+      const bancos = [
+        "santander",
+        "mercadoPago",
+        "caixa",
+        "bradesco",
+        "inter",
+        "sicrediCredito",
+        "dinheiro"
+      ];
+
+      let total = 0;
+
+      bancos.forEach(id => {
+        const val = parseFloat(document.getElementById(id).value);
+        if (!isNaN(val)) {
+          total += val;
+        }
+      });
+
+      document.getElementById("totalBancos").textContent = total.toFixed(2);
+    }
+  </script>
 </body>
 </html>
